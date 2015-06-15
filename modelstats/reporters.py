@@ -40,6 +40,6 @@ class DateTimeReporter(Reporter):
     def get_extra(self, **kwargs):
         if kwargs['group_by'] == 'day':
             return {kwargs['group_by']: 'date({0})'.format(kwargs['datetime_field'])}
-        if kwargs['group_by'] == 'month':
-            truncate_month = connection.ops.date_trunc_sql('month', kwargs['datetime_field'])
-            return {kwargs['group_by']: truncate_month}
+        if kwargs['group_by'] in ['month', 'year']:
+            truncate_date = connection.ops.date_trunc_sql(kwargs['group_by'], kwargs['datetime_field'])
+            return {kwargs['group_by']: truncate_date}

@@ -67,3 +67,12 @@ class TestModelstats(TestCase):
 
         self.assertEqual(report['data'][0]['month'], '2015-01-01')
         self.assertEqual(report['data'][0]['total'], total_quantity)
+
+    def test_can_get_stats_per_datetime_year(self):
+        queryset = self.user_model.objects.all()
+        reporter = reporters.DateTimeReporter(datetime_field='date_joined', group_by='year')
+        report = reporter.process(queryset=queryset)
+        total_quantity = sum([quantity for date, quantity in self.dates_joined])
+
+        self.assertEqual(report['data'][0]['year'], '2015-01-01')
+        self.assertEqual(report['data'][0]['total'], total_quantity)
