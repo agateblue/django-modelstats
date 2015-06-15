@@ -43,7 +43,8 @@ def run_tests(*test_args):
         test_args = ['tests']
 
     # Run tests
-    test_runner = NoseTestSuiteRunner(verbosity=1)
+    from django.test.utils import get_runner
+    test_runner = get_runner(settings)(verbosity=1)
 
     failures = test_runner.run_tests(test_args)
 
