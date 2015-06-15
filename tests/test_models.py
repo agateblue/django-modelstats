@@ -58,5 +58,6 @@ class TestModelstats(unittest.TestCase):
             self.assertEqual(report['data'][i]['day'], date.strftime('%Y-%m-%d'))
             self.assertEqual(report['data'][i]['total'], quantity)
 
+
     def tearDown(self):
         pass
