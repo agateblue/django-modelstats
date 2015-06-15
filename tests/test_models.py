@@ -10,16 +10,16 @@ Tests for `django-modelstats` models module.
 
 import os
 import shutil
-import unittest
 import datetime
 
+from django.test import TestCase
 from django.contrib.auth import get_user_model
 
 from modelstats import models
 from modelstats import reporters
 
 
-class TestModelstats(unittest.TestCase):
+class TestModelstats(TestCase):
 
     def setUp(self):
         self.user_model = get_user_model()
@@ -42,7 +42,8 @@ class TestModelstats(unittest.TestCase):
             date, quantity = data
             q = 0
             while q < quantity:
-                u = self.user_model(date_joined=date, username=str(i) + str(q))
+                username = str(i) + str(q)
+                u = self.user_model(date_joined=date, username=username)
                 u.save()
                 self.assertEqual(u.date_joined, date)
                 users.append(u)
@@ -58,6 +59,11 @@ class TestModelstats(unittest.TestCase):
             self.assertEqual(report['data'][i]['day'], date.strftime('%Y-%m-%d'))
             self.assertEqual(report['data'][i]['total'], quantity)
 
+    def test_can_get_stats_per_datetime_month(self):
+        queryset = self.user_model.objects.all()
+        reporter = reporters.DateTimeReporter(datetime_field='date_joined', group_by='month')
+        report = reporter.process(queryset=queryset)
+        total_quantity = sum([quantity for date, quantity in self.dates_joined])
 
-    def tearDown(self):
-        pass
+        self.assertEqual(report['data'][0]['month'], '2015-01-01')
+        self.assertEqual(report['data'][0]['total'], total_quantity)
