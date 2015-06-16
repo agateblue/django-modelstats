@@ -1,6 +1,8 @@
 from django.db import models
 from django.db import connection
 
+from . import utils
+
 
 class DataSet(object):
     """Gather data from a given queryset"""
@@ -32,17 +34,30 @@ class DataSet(object):
 
 
 
-class DateTimeDataSet(DataSet):
+class DateDataSet(DataSet):
     config = DataSet.config + [
         ('datetime_field', None),
         ('group_by', 'day'),
+        ('fill_missing_dates', False),
     ]
 
     def process_data(self, **kwargs):
         extra = self.get_extra(**kwargs)
-        return self.queryset.extra(select=extra) \
+        data = self.queryset.extra(select=extra) \
                        .values(self.group_by) \
                        .annotate(total=models.Count(self.datetime_field))
+        data = list(data)
+        if self.fill_missing_dates:
+            data = self._fill_missing_dates(data)
+        return data
+
+    def _fill_missing_dates(self, data):
+        """When grouping by date, having no record for a date means the date is not present
+        in results. This method correct this"""
+        start_date, end_date = data[0][self.group_by], data[-1][self.group_by]
+        dates = utils.date_range(step='{0}s'.format(self.group_by))
+        print(dates)
+        return data
 
     def get_extra(self, **kwargs):
         if self.group_by == 'day':

@@ -49,29 +49,35 @@ class TestModelstats(TestCase):
                 users.append(u)
                 q += 1
 
-    def test_datetimedataset(self):
+    def test_datedataset(self):
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', queryset=queryset).process()
+        dataset = datasets.DateDataSet(datetime_field='date_joined', queryset=queryset).process()
 
         for i, date_data in enumerate(self.dates_joined):
             date, quantity = date_data
             self.assertEqual(dataset.data[i]['day'], date.strftime('%Y-%m-%d'))
             self.assertEqual(dataset.data[i]['total'], quantity)
 
-    def test_datetimedataset_month(self):
+    def test_datedataset_month(self):
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', group_by='month', queryset=queryset).process()
+        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='month', queryset=queryset).process()
 
         total_quantity = sum([quantity for date, quantity in self.dates_joined])
 
         self.assertEqual(dataset.data[0]['month'], '2015-01-01')
         self.assertEqual(dataset.data[0]['total'], total_quantity)
 
-    def test_datetimedataset_year(self):
+    def test_datedataset_year(self):
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', group_by='year', queryset=queryset).process()
+        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='year', queryset=queryset).process()
 
         total_quantity = sum([quantity for date, quantity in self.dates_joined])
 
         self.assertEqual(dataset.data[0]['year'], '2015-01-01')
         self.assertEqual(dataset.data[0]['total'], total_quantity)
+
+    def test_datedataset_fill_missing_dates(self):
+        queryset = self.user_model.objects.all()
+        dataset = datasets.DateDataSet(datetime_field='date_joined', fill_missing_dates=True, queryset=queryset).process()
+
+        self.assertEqual(dataset.data[8]['day'], '2015-01-09')
