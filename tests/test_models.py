@@ -16,7 +16,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 
 from modelstats import models
-from modelstats import reporters
+from modelstats import datasets
 
 
 class TestModelstats(TestCase):
@@ -49,30 +49,29 @@ class TestModelstats(TestCase):
                 users.append(u)
                 q += 1
 
-    def test_can_get_stats_per_datetime(self):
+    def test_datetimedataset(self):
         queryset = self.user_model.objects.all()
-        reporter = reporters.DateTimeReporter(datetime_field='date_joined')
-        report = reporter.process(queryset=queryset)
+        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', queryset=queryset).process()
 
-        for i, data in enumerate(self.dates_joined):
-            date, quantity = data
-            self.assertEqual(report['data'][i]['day'], date.strftime('%Y-%m-%d'))
-            self.assertEqual(report['data'][i]['total'], quantity)
+        for i, date_data in enumerate(self.dates_joined):
+            date, quantity = date_data
+            self.assertEqual(dataset.data[i]['day'], date.strftime('%Y-%m-%d'))
+            self.assertEqual(dataset.data[i]['total'], quantity)
 
-    def test_can_get_stats_per_datetime_month(self):
+    def test_datetimedataset_month(self):
         queryset = self.user_model.objects.all()
-        reporter = reporters.DateTimeReporter(datetime_field='date_joined', group_by='month')
-        report = reporter.process(queryset=queryset)
+        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', group_by='month', queryset=queryset).process()
+
         total_quantity = sum([quantity for date, quantity in self.dates_joined])
 
-        self.assertEqual(report['data'][0]['month'], '2015-01-01')
-        self.assertEqual(report['data'][0]['total'], total_quantity)
+        self.assertEqual(dataset.data[0]['month'], '2015-01-01')
+        self.assertEqual(dataset.data[0]['total'], total_quantity)
 
-    def test_can_get_stats_per_datetime_year(self):
+    def test_datetimedataset_year(self):
         queryset = self.user_model.objects.all()
-        reporter = reporters.DateTimeReporter(datetime_field='date_joined', group_by='year')
-        report = reporter.process(queryset=queryset)
+        dataset = datasets.DateTimeDataSet(datetime_field='date_joined', group_by='year', queryset=queryset).process()
+
         total_quantity = sum([quantity for date, quantity in self.dates_joined])
 
-        self.assertEqual(report['data'][0]['year'], '2015-01-01')
-        self.assertEqual(report['data'][0]['total'], total_quantity)
+        self.assertEqual(dataset.data[0]['year'], '2015-01-01')
+        self.assertEqual(dataset.data[0]['total'], total_quantity)
