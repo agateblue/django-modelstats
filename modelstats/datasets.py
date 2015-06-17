@@ -17,7 +17,13 @@ class DataSet(object):
     }
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
+        for kw_name, kw_value in kwargs.items():
+            try:
+                config = self.args_config[kw_name]
+            except KeyError:
+                raise ValueError(' {0} is not a valid argument for this function'.format(kw_name))
+
         for arg_name, arg_config in self.args_config.items():
             v = kwargs.get(arg_name, arg_config.get('default'))
             if v is None and arg_config.get('required', True):
@@ -41,19 +47,52 @@ class DateDataSet(DataSet):
         },
         'fill_missing_dates': {
             'default': False,
-        }
+        },
+        'year': {
+            'required': False,
+        },
+        'month': {
+            'required': False,
+        },
+        'day': {
+            'required': False,
+        },
+        'sort': {
+            'default': 'asc'
+        },
 
     })
 
     def process_data(self, **kwargs):
+        queryset = self.additional_lookups()
         extra = self.get_extra(**kwargs)
-        data = self.queryset.extra(select=extra) \
+        data = queryset.extra(select=extra) \
                        .values(self.group_by) \
                        .annotate(total=models.Count(self.field))
         data = list(data)
+
+        data = sorted(data, key=lambda d: d[self.group_by], reverse = self.sort != 'asc')
+
         if self.fill_missing_dates:
             data = self._fill_missing_dates(data)
         return data
+
+    def additional_lookups(self):
+        """Make additional lookups on queryset, such as specific date filtering"""
+        queryset = self.queryset
+        if self.year:
+            lookup = {'{0}__year'.format(self.field): self.year}
+            queryset = queryset.filter(**lookup)
+
+        if self.month:
+            lookup = {'{0}__month'.format(self.field): self.month}
+            queryset = queryset.filter(**lookup)
+
+        if self.day:
+            lookup = {'{0}__day'.format(self.field): self.day}
+            queryset = queryset.filter(**lookup)
+
+        return queryset
 
     def _fill_missing_dates(self, data):
         """When grouping by date, having no record for a date means the date is not present
