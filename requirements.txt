@@ -2,4 +2,5 @@ django>=1.5.1
 wheel==0.24.0
 python-dateutil
 pytz
+persisting-theory
 # Additional requirements go here
