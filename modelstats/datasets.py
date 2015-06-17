@@ -164,7 +164,7 @@ class DateDataSet(DataSet):
 
     def get_extra(self, **kwargs):
         if self.group_by == 'day':
-            return {'key': 'date({0})'.format(self.field)}
+            return {'key': 'date({0}.{1})'.format(self.queryset.model._meta.db_table, self.field)}
         if self.group_by in ['month', 'year']:
             truncate_date = connection.ops.date_trunc_sql(self.group_by, self.field)
             return {'key': truncate_date}
