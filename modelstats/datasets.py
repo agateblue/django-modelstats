@@ -3,27 +3,26 @@ from django.db import connection
 
 from . import utils
 
+class Required(object):
+    pass
 
 class DataSet(object):
     """Gather data from a given queryset"""
 
-    config = [
-        ('queryset', None),
-        ('title', ''),
-    ]
+    args_config = {
+        'queryset': {},
+        'title': {
+            'required': False,
+        }
+    }
+
 
     def __init__(self, *args, **kwargs):
-        for config_key, default_value in self.config:
-            v = kwargs.get(config_key, default_value)
-            if v is None:
-                raise ValueError('Missing {0} argument'.format(config_key))
-            setattr(self, config_key, v)
-
-    def get_config(self, **kwargs):
-        config = {}
-        for config_key, default_value in self.config:
-            config[config_key] = kwargs.get(config_key, getattr(self, config_key))
-        return config
+        for arg_name, arg_config in self.args_config.items():
+            v = kwargs.get(arg_name, arg_config.get('default'))
+            if v is None and arg_config.get('required', True):
+                raise ValueError('Missing {0} argument'.format(arg_name))
+            setattr(self, arg_name, v)
 
     def process(self):
         self.data = self.process_data()
@@ -35,17 +34,22 @@ class DataSet(object):
 
 
 class DateDataSet(DataSet):
-    config = DataSet.config + [
-        ('datetime_field', None),
-        ('group_by', 'day'),
-        ('fill_missing_dates', False),
-    ]
+    args_config = dict(DataSet.args_config, **{
+        'field': {},
+        'group_by': {
+            'default': 'day',
+        },
+        'fill_missing_dates': {
+            'default': False,
+        }
+
+    })
 
     def process_data(self, **kwargs):
         extra = self.get_extra(**kwargs)
         data = self.queryset.extra(select=extra) \
                        .values(self.group_by) \
-                       .annotate(total=models.Count(self.datetime_field))
+                       .annotate(total=models.Count(self.field))
         data = list(data)
         if self.fill_missing_dates:
             data = self._fill_missing_dates(data)
@@ -72,7 +76,7 @@ class DateDataSet(DataSet):
 
     def get_extra(self, **kwargs):
         if self.group_by == 'day':
-            return {self.group_by: 'date({0})'.format(self.datetime_field)}
+            return {self.group_by: 'date({0})'.format(self.field)}
         if self.group_by in ['month', 'year']:
-            truncate_date = connection.ops.date_trunc_sql(self.group_by, self.datetime_field)
+            truncate_date = connection.ops.date_trunc_sql(self.group_by, self.field)
             return {self.group_by: truncate_date}

@@ -12,7 +12,7 @@ class TestDateDataSet(TestBase):
     def test_datedataset(self):
         self.create_users()
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', queryset=queryset).process()
 
         for i, date_data in enumerate(self.default_dates_joined):
             date, quantity = date_data
@@ -22,7 +22,7 @@ class TestDateDataSet(TestBase):
     def test_datedataset_month(self):
         self.create_users()
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='month', queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', group_by='month', queryset=queryset).process()
 
         total_quantity = sum([quantity for date, quantity in self.default_dates_joined])
 
@@ -32,7 +32,7 @@ class TestDateDataSet(TestBase):
     def test_datedataset_year(self):
         self.create_users()
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='year', queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', group_by='year', queryset=queryset).process()
 
         total_quantity = sum([quantity for date, quantity in self.default_dates_joined])
 
@@ -49,7 +49,7 @@ class TestDateDataSet(TestBase):
         users = self.create_users(dates_joined)
 
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', fill_missing_dates=True, queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', fill_missing_dates=True, queryset=queryset).process()
 
         self.assertEqual(dataset.data[0]['day'], '2015-01-01')
         self.assertEqual(dataset.data[1]['day'], '2015-01-02')
@@ -68,7 +68,7 @@ class TestDateDataSet(TestBase):
 
         users = self.create_users(dates_joined)
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='month', fill_missing_dates=True, queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', group_by='month', fill_missing_dates=True, queryset=queryset).process()
 
         self.assertEqual(dataset.data[0]['month'], '2015-01-01')
         self.assertEqual(dataset.data[1]['month'], '2015-02-01')
@@ -85,7 +85,7 @@ class TestDateDataSet(TestBase):
 
         users = self.create_users(dates_joined)
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(datetime_field='date_joined', group_by='year', fill_missing_dates=True, queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', group_by='year', fill_missing_dates=True, queryset=queryset).process()
 
         self.assertEqual(dataset.data[0]['year'], '2015-01-01')
         self.assertEqual(dataset.data[1]['year'], '2016-01-01')
