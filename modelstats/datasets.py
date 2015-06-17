@@ -1,3 +1,6 @@
+import datetime
+from dateutil.relativedelta import relativedelta
+
 from django.db import models
 from django.db import connection
 
@@ -46,6 +49,14 @@ class DateDataSet(DataSet):
         'sort': {
             'default': 'asc'
         },
+        'start_date': {
+            'required': False,
+        },
+        'end_date': {
+            'required': False,
+            'default': None,
+            'cast': lambda v: datetime.date.today() if v == 'today'  else v
+        }
 
     })
     @property
@@ -101,25 +112,44 @@ class DateDataSet(DataSet):
             lookup = {'{0}__day'.format(self.field): self.day}
             queryset = queryset.filter(**lookup)
 
+        if self.start_date:
+            lookup = {
+                '{0}__gte'.format(self.field): self.start_date
+            }
+            queryset = queryset.filter(**lookup)
+
+        if self.end_date:
+            lookup = {
+                '{0}__lte'.format(self.field): self.end_date
+            }
+            queryset = queryset.filter(**lookup)
+
         return queryset
 
     def _fill_missing_dates(self, data):
         """When grouping by date, having no record for a date means the date is not present
         in results. This method correct this"""
-        start_date, end_date = data[0]['key'], data[-1]['key']
-        dates = utils.date_range(start_date, end_date, step='{0}s'.format(self.group_by))
+        start_date, end_date = self.start_date or data[0]['key'], self.end_date or data[-1]['key']
+
+        all_dates = utils.date_range(start_date, end_date, step='{0}s'.format(self.group_by))
+        data_dates = [row['key'] for row in data]
+        missing = sorted(set([d.strftime(self.date_format) for d in all_dates]) - set(data_dates))
         new_data = []
         offset = 0
-        for i, date in enumerate(dates):
+        data_length = len(data)
+
+        for i, date in enumerate(all_dates):
             formated_date = date.strftime(self.date_format)
-            try:
+
+            if i < data_length:
                 if data[i-offset]['key'] == formated_date:
                     new_data.append({'key': formated_date, 'value': data[i-offset]['value']})
                 else:
                     offset += 1
                     new_data.append({'key': formated_date, 'value': 0})
-            except IndexError:
-                break
+            else:
+                new_data.append({'key': formated_date, 'value': 0})
+
         return new_data
 
     def get_extra(self, **kwargs):

@@ -13,6 +13,8 @@ class ArgsManager(object):
 
         for arg_name, arg_config in self.args_config.items():
             v = kwargs.get(arg_name, arg_config.get('default'))
+            if arg_config.get('cast'):
+                v = arg_config.get('cast')(v)
             if v is None and arg_config.get('required', True):
                 raise ValueError('Missing {0} argument'.format(arg_name))
             setattr(self, arg_name, v)
