@@ -32,7 +32,7 @@ class DateDataSet(DataSet):
             'default': 'day',
         },
         'fill_missing_dates': {
-            'default': False,
+            'default': True,
         },
         'year': {
             'required': False,
