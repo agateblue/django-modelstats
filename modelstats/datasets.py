@@ -86,6 +86,7 @@ class DateDataSet(DataSet):
         new_data = []
 
         for row in data:
+            raw_key = row['key']
             try:
                 key = row['key'].strftime(self.date_format)
             except AttributeError:
@@ -93,6 +94,7 @@ class DateDataSet(DataSet):
             new_row = {
                 'key': key,
                 'value': row['value'],
+                'raw_key': raw_key,
             }
             new_data.append(new_row)
         return new_data
@@ -129,27 +131,30 @@ class DateDataSet(DataSet):
     def _fill_missing_dates(self, data):
         """When grouping by date, having no record for a date means the date is not present
         in results. This method correct this"""
-        start_date, end_date = self.start_date or data[0]['key'], self.end_date or data[-1]['key']
+        start_date, end_date = self.start_date or data[0]['raw_key'], self.end_date or data[-1]['raw_key']
 
         all_dates = utils.date_range(start_date, end_date, step='{0}s'.format(self.group_by))
         data_dates = [row['key'] for row in data]
         missing = sorted(set([d.strftime(self.date_format) for d in all_dates]) - set(data_dates))
+        print(missing)
         new_data = []
         offset = 0
         data_length = len(data)
+        print(data)
 
         for i, date in enumerate(all_dates):
             formated_date = date.strftime(self.date_format)
-
-            if i < data_length:
-                if data[i-offset]['key'] == formated_date:
-                    new_data.append({'key': formated_date, 'value': data[i-offset]['value']})
-                else:
-                    offset += 1
-                    new_data.append({'key': formated_date, 'value': 0})
-            else:
+            new_row = {}
+            if formated_date in missing:
+                offset += 1
                 new_data.append({'key': formated_date, 'value': 0})
-
+                new_row['key'] = formated_date
+                new_row['raw_key'] = date
+                new_row['value'] = 0
+            else:
+                new_row = data[i - offset]
+                new_row['key'] = formated_date
+            new_data.append(new_row)
         return new_data
 
     def get_extra(self, **kwargs):

@@ -23,7 +23,11 @@ class ArgsManager(object):
 def date_range(start_date, end_date, step='days'):
     try:
         start_date = dateutil.parser.parse(start_date)
-        end_date = dateutil.parser.parse(end_date)
+    except (AttributeError, ValueError):
+        pass
+
+    try:
+        start_date = dateutil.parser.parse(start_date)
     except (AttributeError, ValueError):
         pass
 
