@@ -1,0 +1,18 @@
+<table>
+    <caption>{{ report.title }}</caption>
+    <tr>
+        <th></th>
+        {% for dataset in report.datasets %}
+            <th>{{ dataset.title }}</th>
+        {% endfor %}
+    </tr>
+
+    {% for row in report.data %}
+    <tr>
+        <td>{{ row.key }}</td>
+        {% for v in row.values %}
+            <td>{{ v }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>

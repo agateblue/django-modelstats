@@ -16,8 +16,8 @@ class TestDateDataSet(TestBase):
 
         for i, date_data in enumerate(self.default_dates_joined):
             date, quantity = date_data
-            self.assertEqual(dataset.data[i]['day'], date.strftime('%Y-%m-%d'))
-            self.assertEqual(dataset.data[i]['total'], quantity)
+            self.assertEqual(dataset.data[i]['key'], date.strftime('%Y-%m-%d'))
+            self.assertEqual(dataset.data[i]['value'], quantity)
 
     def test_datedataset_lookup_year(self):
         dates_joined = [
@@ -29,7 +29,7 @@ class TestDateDataSet(TestBase):
         self.create_users(dates_joined)
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', queryset=queryset, year=2016).process()
-        self.assertEqual(sum([d['total'] for d in dataset.data]), 20)
+        self.assertEqual(sum([d['value'] for d in dataset.data]), 20)
 
     def test_datedataset_lookup_month(self):
         dates_joined = [
@@ -42,7 +42,7 @@ class TestDateDataSet(TestBase):
         self.create_users(dates_joined)
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', queryset=queryset, month=2).process()
-        self.assertEqual(sum([d['total'] for d in dataset.data]), 14)
+        self.assertEqual(sum([d['value'] for d in dataset.data]), 14)
 
     def test_datedataset_lookup_day(self):
         dates_joined = [
@@ -55,7 +55,7 @@ class TestDateDataSet(TestBase):
         self.create_users(dates_joined)
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', queryset=queryset, day=1).process()
-        self.assertEqual(sum([d['total'] for d in dataset.data]), 19)
+        self.assertEqual(sum([d['value'] for d in dataset.data]), 19)
 
 
     def test_datedataset_group_by_month(self):
@@ -65,8 +65,8 @@ class TestDateDataSet(TestBase):
 
         total_quantity = sum([quantity for date, quantity in self.default_dates_joined])
 
-        self.assertEqual(dataset.data[0]['month'], '2015-01-01')
-        self.assertEqual(dataset.data[0]['total'], total_quantity)
+        self.assertEqual(dataset.data[0]['key'], '2015-01-01')
+        self.assertEqual(dataset.data[0]['value'], total_quantity)
 
     def test_datedataset_group_by_year(self):
         self.create_users()
@@ -75,8 +75,8 @@ class TestDateDataSet(TestBase):
 
         total_quantity = sum([quantity for date, quantity in self.default_dates_joined])
 
-        self.assertEqual(dataset.data[0]['year'], '2015-01-01')
-        self.assertEqual(dataset.data[0]['total'], total_quantity)
+        self.assertEqual(dataset.data[0]['key'], '2015-01-01')
+        self.assertEqual(dataset.data[0]['value'], total_quantity)
 
     def test_datedataset_sort_reverse(self):
         dates_joined = [
@@ -88,11 +88,11 @@ class TestDateDataSet(TestBase):
         users = self.create_users(dates_joined)
 
         queryset = self.user_model.objects.all()
-        dataset = datasets.DateDataSet(field='date_joined', sort='reversed', queryset=queryset).process()
+        dataset = datasets.DateDataSet(field='date_joined', sort='reverse', queryset=queryset).process()
 
-        self.assertEqual(dataset.data[0]['day'], '2015-01-03')
-        self.assertEqual(dataset.data[1]['day'], '2015-01-02')
-        self.assertEqual(dataset.data[2]['day'], '2015-01-01')
+        self.assertEqual(dataset.data[0]['key'], '2015-01-03')
+        self.assertEqual(dataset.data[1]['key'], '2015-01-02')
+        self.assertEqual(dataset.data[2]['key'], '2015-01-01')
 
     def test_datedataset_fill_missing_dates_day(self):
         dates_joined = [
@@ -106,12 +106,12 @@ class TestDateDataSet(TestBase):
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', fill_missing_dates=True, queryset=queryset).process()
 
-        self.assertEqual(dataset.data[0]['day'], '2015-01-01')
-        self.assertEqual(dataset.data[1]['day'], '2015-01-02')
-        self.assertEqual(dataset.data[2]['day'], '2015-01-03')
-        self.assertEqual(dataset.data[3]['day'], '2015-01-04')
-        self.assertEqual(dataset.data[4]['day'], '2015-01-05')
-        self.assertEqual(dataset.data[2]['total'], 0)
+        self.assertEqual(dataset.data[0]['key'], '2015-01-01')
+        self.assertEqual(dataset.data[1]['key'], '2015-01-02')
+        self.assertEqual(dataset.data[2]['key'], '2015-01-03')
+        self.assertEqual(dataset.data[3]['key'], '2015-01-04')
+        self.assertEqual(dataset.data[4]['key'], '2015-01-05')
+        self.assertEqual(dataset.data[2]['value'], 0)
 
 
     def test_datedataset_fill_missing_dates_month(self):
@@ -125,11 +125,11 @@ class TestDateDataSet(TestBase):
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', group_by='month', fill_missing_dates=True, queryset=queryset).process()
 
-        self.assertEqual(dataset.data[0]['month'], '2015-01-01')
-        self.assertEqual(dataset.data[1]['month'], '2015-02-01')
-        self.assertEqual(dataset.data[2]['month'], '2015-03-01')
-        self.assertEqual(dataset.data[3]['month'], '2015-04-01')
-        self.assertEqual(dataset.data[4]['month'], '2015-05-01')
+        self.assertEqual(dataset.data[0]['key'], '2015-01-01')
+        self.assertEqual(dataset.data[1]['key'], '2015-02-01')
+        self.assertEqual(dataset.data[2]['key'], '2015-03-01')
+        self.assertEqual(dataset.data[3]['key'], '2015-04-01')
+        self.assertEqual(dataset.data[4]['key'], '2015-05-01')
 
     def test_datedataset_fill_missing_dates_year(self):
         dates_joined = [
@@ -142,9 +142,9 @@ class TestDateDataSet(TestBase):
         queryset = self.user_model.objects.all()
         dataset = datasets.DateDataSet(field='date_joined', group_by='year', fill_missing_dates=True, queryset=queryset).process()
 
-        self.assertEqual(dataset.data[0]['year'], '2015-01-01')
-        self.assertEqual(dataset.data[1]['year'], '2016-01-01')
-        self.assertEqual(dataset.data[2]['year'], '2017-01-01')
-        self.assertEqual(dataset.data[3]['year'], '2018-01-01')
-        self.assertEqual(dataset.data[4]['year'], '2019-01-01')
-        self.assertEqual(dataset.data[5]['year'], '2020-01-01')
+        self.assertEqual(dataset.data[0]['key'], '2015-01-01')
+        self.assertEqual(dataset.data[1]['key'], '2016-01-01')
+        self.assertEqual(dataset.data[2]['key'], '2017-01-01')
+        self.assertEqual(dataset.data[3]['key'], '2018-01-01')
+        self.assertEqual(dataset.data[4]['key'], '2019-01-01')
+        self.assertEqual(dataset.data[5]['key'], '2020-01-01')

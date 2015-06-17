@@ -2,6 +2,22 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import dateutil.parser
 
+
+class ArgsManager(object):
+    def __init__(self, **kwargs):
+        for kw_name, kw_value in kwargs.items():
+            try:
+                config = self.args_config[kw_name]
+            except KeyError:
+                raise ValueError(' {0} is not a valid argument for this function'.format(kw_name))
+
+        for arg_name, arg_config in self.args_config.items():
+            v = kwargs.get(arg_name, arg_config.get('default'))
+            if v is None and arg_config.get('required', True):
+                raise ValueError('Missing {0} argument'.format(arg_name))
+            setattr(self, arg_name, v)
+
+
 def date_range(start_date, end_date, step='days'):
     try:
         start_date = dateutil.parser.parse(start_date)
