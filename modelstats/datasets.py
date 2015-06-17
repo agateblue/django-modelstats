@@ -48,6 +48,14 @@ class DateDataSet(DataSet):
         },
 
     })
+    @property
+    def date_format(self):
+        if self.group_by == 'day':
+            return '%Y/%m/%d'
+        if self.group_by == 'month':
+            return '%Y/%m'
+        if self.group_by == 'year':
+            return '%Y'
 
     def process_data(self, **kwargs):
         queryset = self.additional_lookups()
@@ -68,7 +76,7 @@ class DateDataSet(DataSet):
 
         for row in data:
             try:
-                key = row['key'].strftime('%Y-%m-%d')
+                key = row['key'].strftime(self.date_format)
             except AttributeError:
                 key = row['key']
             new_row = {
@@ -103,7 +111,7 @@ class DateDataSet(DataSet):
         new_data = []
         offset = 0
         for i, date in enumerate(dates):
-            formated_date = date.strftime("%Y-%m-%d")
+            formated_date = date.strftime(self.date_format)
             try:
                 if data[i-offset]['key'] == formated_date:
                     new_data.append({'key': formated_date, 'value': data[i-offset]['value']})

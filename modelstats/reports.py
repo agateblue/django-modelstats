@@ -1,4 +1,5 @@
 from django.template.loader import render_to_string
+from django.conf import settings
 
 from .utils import ArgsManager
 
@@ -6,14 +7,21 @@ from .utils import ArgsManager
 class Report(ArgsManager):
     args_config = {
         'template_name': {
-            'default': 'modelstats/report.html',
+            'required': False,
         },
         'title': {},
         'datasets': {},
     }
 
+    def get_key_verbose_name(self):
+        return self.datasets[0].queryset.model._meta.get_field(self.datasets[0].field).verbose_name
+
+    def get_template_name(self):
+        default = getattr(settings, 'MODELSTATS_DEFAULT_REPORT_TEMPLATE', 'modelstats/report.html')
+        return self.template_name or default
+
     def render(self):
-        return render_to_string(self.template_name, {'report': self})
+        return render_to_string(self.get_template_name(), {'report': self})
 
     def data(self):
         d = []

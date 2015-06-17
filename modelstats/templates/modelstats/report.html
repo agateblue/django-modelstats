@@ -1,18 +1,25 @@
-<table>
+<table class="{% block table_class %}{% endblock %}" {% block table_data %}{% endblock %}>
     <caption>{{ report.title }}</caption>
-    <tr>
-        <th></th>
-        {% for dataset in report.datasets %}
-            <th>{{ dataset.title }}</th>
-        {% endfor %}
-    </tr>
-
-    {% for row in report.data %}
-    <tr>
-        <td>{{ row.key }}</td>
-        {% for v in row.values %}
-            <td>{{ v }}</td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
+    <thead>
+        {% block table_head %}
+            <tr>
+                <th>{{ report.get_key_verbose_name }}</th>
+                {% for dataset in report.datasets %}
+                    <th>{% if dataset.title %}{{ dataset.title }}{% endif %}</th>
+                {% endfor %}
+            </tr>
+        {% endblock %}
+    </thead>
+    <tbody>
+        {% block table_body %}
+            {% for row in report.data %}
+            <tr>
+                <td>{{ row.key }}</td>
+                {% for v in row.values %}
+                    <td>{{ v }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        {% endblock %}
+    </tbody>
 </table>
