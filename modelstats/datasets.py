@@ -75,10 +75,10 @@ class DateDataSet(DataSet):
     def process_data(self, **kwargs):
         queryset = self.additional_lookups()
         extra = self.get_extra(**kwargs)
-        # value = self.value if self.value else
+        value = self.value if self.value else models.Count(self.field)
         data = queryset.extra(select=extra) \
                        .values('key') \
-                       .annotate(value=models.Count(self.field))
+                       .annotate(value=value)
         data = list(data)
         if len(data) == 0:
             return data
