@@ -27,10 +27,10 @@ def date_range(start_date, end_date, step='days'):
         pass
 
     try:
-        start_date = dateutil.parser.parse(start_date)
+        end_date = dateutil.parser.parse(end_date)
     except (AttributeError, ValueError):
         pass
-
+    assert start_date <= end_date
     kw = {step: 1}
     date_list = [start_date]
     previous_date = start_date
