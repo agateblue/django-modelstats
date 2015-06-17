@@ -55,9 +55,20 @@ class DateDataSet(DataSet):
         """When grouping by date, having no record for a date means the date is not present
         in results. This method correct this"""
         start_date, end_date = data[0][self.group_by], data[-1][self.group_by]
-        dates = utils.date_range(step='{0}s'.format(self.group_by))
-        print(dates)
-        return data
+        dates = utils.date_range(start_date, end_date, step='{0}s'.format(self.group_by))
+        new_data = []
+        offset = 0
+        for i, date in enumerate(dates):
+            formated_date = date.strftime("%Y-%m-%d")
+            try:
+                if data[i-offset][self.group_by] == formated_date:
+                    new_data.append({self.group_by: formated_date, 'total': data[i-offset]['total']})
+                else:
+                    offset += 1
+                    new_data.append({self.group_by: formated_date, 'total': 0})
+            except IndexError:
+                break
+        return new_data
 
     def get_extra(self, **kwargs):
         if self.group_by == 'day':
