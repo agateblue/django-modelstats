@@ -75,6 +75,8 @@ class DateDataSet(DataSet):
                        .values('key') \
                        .annotate(value=models.Count(self.field))
         data = list(data)
+        if len(data) == 0:
+            return data
         data = self.clean_keys(data)
         data = sorted(data, key=lambda d: d['key'], reverse = self.sort != 'asc')
 
@@ -132,11 +134,13 @@ class DateDataSet(DataSet):
         """When grouping by date, having no record for a date means the date is not present
         in results. This method correct this"""
         start_date, end_date = self.start_date or data[0]['raw_key'], self.end_date or data[-1]['raw_key']
-
+        if start_date == end_date:
+            return data
+        print(start_date, end_date)
         all_dates = utils.date_range(start_date, end_date, step='{0}s'.format(self.group_by))
         data_dates = [row['key'] for row in data]
         missing = sorted(set([d.strftime(self.date_format) for d in all_dates]) - set(data_dates))
-        print(missing)
+        print(all_dates, missing)
         new_data = []
         offset = 0
         data_length = len(data)
